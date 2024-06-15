@@ -14,13 +14,11 @@ class RailwayKnowledgeSystem:
         for p_file in sorted(glob('data/*.md')):
             knowledge += self._load_markdown_file(p_file)
         self.sentences = knowledge.split('\n')
-        self.rag_tokenizer = AutoTokenizer.from_pretrained("cl-tohoku/bert-base-japanese")
-        self.rag_model = AutoModel.from_pretrained("cl-tohoku/bert-base-japanese")
+        self.tokenizer = AutoTokenizer.from_pretrained("rinna/japanese-gpt2-medium")
+        self.model = GPT2LMHeadModel.from_pretrained("rinna/japanese-gpt2-medium")
         embeddings = self._embed_text(self.sentences)
         self.index = faiss.IndexFlatL2(embeddings.shape[1])
         self.index.add(embeddings)
-        self.llm_tokenizer = AutoTokenizer.from_pretrained("rinna/japanese-gpt2-medium")
-        self.llm_model = GPT2LMHeadModel.from_pretrained("rinna/japanese-gpt2-medium")
 
     def _load_markdown_file(self, file_path):
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -28,9 +26,9 @@ class RailwayKnowledgeSystem:
         return text
 
     def _embed_text(self, texts):
-        inputs = self.rag_tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
+        inputs = self.tokenizer(texts, return_tensors="pt")
         with torch.no_grad():
-            embeddings = self.rag_model(**inputs).last_hidden_state.mean(dim=1)
+            embeddings = self.model.transformer.wte(inputs["input_ids"]).mean(dim=1)
         return embeddings.numpy()
 
     def _check_loops(self, answer) -> None:
@@ -48,17 +46,17 @@ class RailwayKnowledgeSystem:
         return prompt
 
     def generate_answer(self, prompt) -> None:
-        inputs = self.llm_tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
+        inputs = self.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
         input_ids = inputs['input_ids']
         attention_mask = inputs['attention_mask']
-        outputs = self.llm_model.generate(
+        outputs = self.model.generate(
             input_ids,
             max_length=1000,
             num_return_sequences=1,
             attention_mask=attention_mask,
-            pad_token_id=self.llm_tokenizer.pad_token_id
+            pad_token_id=self.tokenizer.pad_token_id
         )
-        answer = self.llm_tokenizer.decode(outputs[0], skip_special_tokens=True)[len(prompt):]
+        answer = self.tokenizer.decode(outputs[0], skip_special_tokens=True)[len(prompt):]
         if self._check_loops(answer):
             return self.generate_answer(prompt)
         return answer
