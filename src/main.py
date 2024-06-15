@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 import torch
 import faiss
 from transformers import AutoTokenizer, AutoModel
-from transformers import GPT2LMHeadModel, GPT2Tokenizer, GPT2LMHeadModel
+from transformers import GPT2LMHeadModel, GPT2LMHeadModel
 
 
 class RailwayKnowledgeSystem:
@@ -65,7 +65,7 @@ class RailwayKnowledgeSystem:
 
     def inference(self, query) -> None:
         basis = self.get_basis(query)
-        prompt = self.make_prompt(query, basis)
+        prompt = self.make_prompt(query)
         answer = self.generate_answer(prompt)
         output = \
             f'''
