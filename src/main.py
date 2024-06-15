@@ -46,15 +46,15 @@ class RailwayKnowledgeSystem:
         return prompt
 
     def generate_answer(self, prompt) -> None:
+        self.count += 1
         inputs = self.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
         input_ids = inputs['input_ids']
         attention_mask = inputs['attention_mask']
         outputs = self.model.generate(
             input_ids,
-            max_length=1000,
             num_return_sequences=1,
             attention_mask=attention_mask,
-            pad_token_id=self.tokenizer.pad_token_id
+            pad_token_id=self.tokenizer.pad_token_id,
         )
         answer = self.tokenizer.decode(outputs[0], skip_special_tokens=True)[len(prompt):]
         if self._check_loops(answer):
@@ -62,6 +62,7 @@ class RailwayKnowledgeSystem:
         return answer
 
     def inference(self, query) -> None:
+        self.count = 0
         basis = self.get_basis(query)
         prompt = self.make_prompt(query)
         answer = self.generate_answer(prompt)
