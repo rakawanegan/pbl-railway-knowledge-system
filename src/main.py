@@ -16,7 +16,7 @@ class RailwayKnowledgeSystem:
         self.sentences = knowledge.split('\n')
         self.rag_tokenizer = AutoTokenizer.from_pretrained("cl-tohoku/bert-base-japanese")
         self.rag_model = AutoModel.from_pretrained("cl-tohoku/bert-base-japanese")
-        embeddings = self.embed_text(self.sentences)
+        embeddings = self._embed_text(self.sentences)
         self.index = faiss.IndexFlatL2(embeddings.shape[1])
         self.index.add(embeddings)
         self.llm_tokenizer = AutoTokenizer.from_pretrained("rinna/japanese-gpt2-medium")
