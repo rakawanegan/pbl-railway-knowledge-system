@@ -26,7 +26,7 @@ class RailwayKnowledgeSystem:
         return text
 
     def _embed_text(self, texts):
-        inputs = self.tokenizer(texts, return_tensors="pt")
+        inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True)
         with torch.no_grad():
             embeddings = self.model.transformer.wte(inputs["input_ids"]).mean(dim=1)
         return embeddings.numpy()
