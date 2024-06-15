@@ -37,7 +37,7 @@ class RailwayKnowledgeSystem:
         return False
 
     def get_basis(self, query) -> None:
-        query_embedding = self.embed_text([query])
+        query_embedding = self._embed_text([query])
         _, indices = self.index.search(query_embedding, self.k) # first output is distance
         basis = " ".join([self.sentences[i] for i in indices[0] if i < len(self.sentences)])
         return basis
