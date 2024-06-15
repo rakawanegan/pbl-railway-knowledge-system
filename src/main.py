@@ -32,7 +32,7 @@ class RailwayKnowledgeSystem:
         return embeddings.numpy()
 
     def _check_loops(self, answer) -> None:
-        return False
+        return len(answer.split(':')) > 10
 
     def get_basis(self, query) -> None:
         query_embedding = self._embed_text([query])
