@@ -8,10 +8,10 @@ from transformers import GPT2LMHeadModel, GPT2Tokenizer, GPT2LMHeadModel
 
 
 class RailwayKnowledgeSystem:
-    def __init__(self, data_dir, k) -> None:
+    def __init__(self, k) -> None:
         self.k = k
         knowledge = ''
-        for p_file in sorted(glob(data_dir)):
+        for p_file in sorted(glob('data/*.md')):
             knowledge += self._load_markdown_file(p_file)
         self.sentences = knowledge.split('\n')
         self.rag_tokenizer = AutoTokenizer.from_pretrained("cl-tohoku/bert-base-japanese")
