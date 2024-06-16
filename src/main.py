@@ -49,7 +49,7 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
     def generate_answer(self, prompt: str) -> str:
         self.count = 0
         answer = self._generate_answer(prompt)
-        if self._check_loops(answer) and self.count < 10:
+        while self._check_loops(answer) and self.count < 10:
             print(f"Loop detected. Retry {self.count}")
             answer = self._generate_answer(prompt)
         return answer
