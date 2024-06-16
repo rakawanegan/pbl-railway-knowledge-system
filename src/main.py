@@ -59,6 +59,7 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
         )
         answer = self.tokenizer.decode(outputs[0], skip_special_tokens=True)[len(prompt):]
         if self._check_loops(answer) and self.count < 10:
+            print(f"Loop detected. Retry {self.count}")
             return self.generate_answer(prompt)
         return answer
 
