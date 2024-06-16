@@ -27,7 +27,7 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
         return text
 
     def _embed_text(self, texts: list[str]) -> np.ndarray:
-        inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True)
+        inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=1024)
         with torch.no_grad():
             embeddings = self.model.transformer.wte(inputs["input_ids"]).mean(dim=1)
         return embeddings.numpy()
@@ -48,7 +48,7 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
 
     def generate_answer(self, prompt: str) -> str:
         self.count += 1
-        inputs = self.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True)
+        inputs = self.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=1024)
         input_ids = inputs['input_ids']
         attention_mask = inputs['attention_mask']
         outputs = self.model.generate(
