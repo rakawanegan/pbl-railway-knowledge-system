@@ -47,6 +47,14 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
         return prompt
 
     def generate_answer(self, prompt: str) -> str:
+        self.count = 0
+        answer = self._generate_answer(prompt)
+        if self._check_loops(answer) and self.count < 10:
+            print(f"Loop detected. Retry {self.count}")
+            answer = self._generate_answer(prompt)
+        return answer
+
+    def _generate_answer(self, prompt: str) -> str:
         self.count += 1
         inputs = self.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=1024)
         input_ids = inputs['input_ids']
@@ -59,13 +67,9 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
             pad_token_id=self.tokenizer.pad_token_id,
         )
         answer = self.tokenizer.decode(outputs[0], skip_special_tokens=True)[len(prompt):]
-        if self._check_loops(answer) and self.count < 10:
-            print(f"Loop detected. Retry {self.count}")
-            return self.generate_answer(prompt)
         return answer
 
     def inference(self, query: str) -> str:
-        self.count = 0
         basis = self.get_basis(query)
         prompt = self.make_prompt(query)
         answer = self.generate_answer(prompt)
