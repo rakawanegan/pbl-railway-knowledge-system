@@ -54,6 +54,7 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
         outputs = self.model.generate(
             input_ids,
             num_return_sequences=1,
+            max_length=1000,
             attention_mask=attention_mask,
             pad_token_id=self.tokenizer.pad_token_id,
         )
