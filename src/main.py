@@ -43,7 +43,7 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
 
     def make_prompt(self, query: str) -> str:
         basis = self.get_basis(query)
-        prompt = f"Context: {basis}\nQ: {query}\nA:"
+        prompt = f"Context: {basis}\nQuery: {query}\nAnswer:"
         return prompt
 
     def generate_answer(self, prompt: str) -> str:
@@ -67,7 +67,7 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
             pad_token_id=self.tokenizer.pad_token_id,
             no_repeat_ngram_size=2,
         )
-        answer = ''.join(self.tokenizer.decode(outputs[0], skip_special_tokens=True).split('answer:')[1:])
+        answer = ''.join(self.tokenizer.decode(outputs[0], skip_special_tokens=True).split('Answer:')[1:])
         return answer
 
     def inference(self, query: str) -> str:
@@ -119,5 +119,5 @@ class MakeRailwayKnowledgePromptWithTohokuBERT:
 
     def make_prompt(self, query: str) -> None:
         basis = self.get_basis(query)
-        prompt = f"Context: {basis}\nQ: {query}\nA:"
+        prompt = f"Context: {basis}\nQuery: {query}\nAnswer:"
         return prompt
