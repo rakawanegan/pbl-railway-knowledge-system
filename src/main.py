@@ -67,7 +67,7 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
             pad_token_id=self.tokenizer.pad_token_id,
             no_repeat_ngram_size=2,
         )
-        answer = ''.join(self.tokenizer.decode(outputs[0], skip_special_tokens=True).split('Answer:')[1:])
+        answer = ''.join(self.tokenizer.decode(outputs[0], skip_special_tokens=True).split('nswer:')[1:])
         return answer
 
     def inference(self, query: str) -> str:
