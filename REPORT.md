@@ -88,8 +88,7 @@ LLM 大規模言語モデル講座 講義資料 © 2023 by 東京大学松尾研
 > Rinnaを用いたRailwayKnowledgeSystemによって文章抽出を行い、作成したプロンプトをRinnaに入力し推論を行いました。
 
 ![ExplainExperiment.png](./assets/ExplainExperiment.png)
-
-※青で記載した部分はローカル環境で動作可能なものを示す
+made by Teshima Hisanori
 
 
 # 2. Development of Local LLM
@@ -883,9 +882,6 @@ made by GPTs with 鉄道に関する技術上の基準を定める省令の解�
 
 ## 2.0.1. Rinna
 
-![rinna-rinna-archi.png](./assets/rinna-rinna-archi.png)
-
-
 ```python
 with timer("set up"):
     rks = RailwayKnowledgeSystemWithRinnaGPT2(k=5)
@@ -920,9 +916,6 @@ print(total_output)
 
 
 ## 2.0.2. BERT + Rinna
-
-![bert-rinna-archi.png](./assets/bert-rinna-archi.png)
-
 
 ```python
 with timer("set up"):
