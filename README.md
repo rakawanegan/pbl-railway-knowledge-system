@@ -27,8 +27,6 @@ Here's an organized index for your README file for the "Railway Knowledge System
 
 # Index
 
-- [Introduction](#introduction)
-  - [About Rinna](#about-rinna)
 - [Lecture](#lecture)
   - [0.1 BART and GPT](#01-bart-and-gpt)
   - [0.2 Application of Text Generation Models](#02-application-of-text-generation-models)
