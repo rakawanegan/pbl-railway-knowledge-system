@@ -174,6 +174,8 @@ This setup guide and example usage demonstrate how to efficiently leverage the R
 
 This section delves into the performance analysis, potential improvements, and applicational versatility of the system, providing insights into how this technology can be adapted for other domains.
 
+
+more information is [here](./REPORT.md)
 ## References
 
 - Detailed references to standards, datasets, and models used in the project.
