@@ -1,5 +1,6 @@
-import numpy as np
+import os
 from glob import glob
+import numpy as np
 import markdown
 from bs4 import BeautifulSoup
 import torch
@@ -17,9 +18,14 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
         self.sentences = knowledge.split('\n')
         self.tokenizer = AutoTokenizer.from_pretrained("rinna/japanese-gpt2-medium")
         self.model = GPT2LMHeadModel.from_pretrained("rinna/japanese-gpt2-medium")
-        embeddings = self._embed_text(self.sentences)
-        self.index = faiss.IndexFlatL2(embeddings.shape[1])
-        self.index.add(embeddings)
+        if os.path.exists("./chache/index.faiss"):
+            self.index = faiss.read_index("./chache/index.faiss")
+        else:
+            embeddings = self._embed_text(self.sentences)
+            self.index = faiss.IndexFlatL2(embeddings.shape[1])
+            self.index.add(embeddings)
+            os.makedirs("./chache", exist_ok=True)
+            faiss.write_index(self.index, "./chache/index.faiss")
 
     def _load_markdown_file(self, file_path: str) -> str:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -31,6 +37,9 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
         with torch.no_grad():
             embeddings = self.model.transformer.wte(inputs["input_ids"]).mean(dim=1)
         return embeddings.numpy()
+
+    def get_text(self) -> str:
+        return '\n'.join(self.sentences)
 
     def _check_loops(self, answer: str) -> bool:
         return len(answer.split(':')) > 10
@@ -96,9 +105,14 @@ class MakeRailwayKnowledgePromptWithTohokuBERT:
         self.sentences = knowledge.split('\n')
         self.tokenizer = AutoTokenizer.from_pretrained("cl-tohoku/bert-base-japanese")
         self.model = AutoModel.from_pretrained("cl-tohoku/bert-base-japanese")
-        embeddings = self._embed_text(self.sentences)
-        self.index = faiss.IndexFlatL2(embeddings.shape[1])
-        self.index.add(embeddings)
+        if os.path.exists("./chache/index.faiss"):
+            self.index = faiss.read_index("./chache/index.faiss")
+        else:
+            embeddings = self._embed_text(self.sentences)
+            self.index = faiss.IndexFlatL2(embeddings.shape[1])
+            self.index.add(embeddings)
+            os.makedirs("./chache", exist_ok=True)
+            faiss.write_index(self.index, "./chache/index.faiss")
 
     def _load_markdown_file(self, file_path: str) -> str:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -110,6 +124,9 @@ class MakeRailwayKnowledgePromptWithTohokuBERT:
         with torch.no_grad():
             embeddings = self.model(**inputs).last_hidden_state.mean(dim=1)
         return embeddings.numpy()
+
+    def get_text(self) -> str:
+        return '\n'.join(self.sentences)
 
     def get_basis(self, query: str) -> None:
         query_embedding = self._embed_text([query])
