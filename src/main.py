@@ -18,14 +18,14 @@ class RailwayKnowledgeSystemWithRinnaGPT2:
         self.sentences = knowledge.split('\n')
         self.tokenizer = AutoTokenizer.from_pretrained("rinna/japanese-gpt2-medium")
         self.model = GPT2LMHeadModel.from_pretrained("rinna/japanese-gpt2-medium")
-        if os.path.exists("./chache/index.faiss"):
-            self.index = faiss.read_index("./chache/index.faiss")
+        if os.path.exists("./cache/index.faiss"):
+            self.index = faiss.read_index("./cache/index.faiss")
         else:
             embeddings = self._embed_text(self.sentences)
             self.index = faiss.IndexFlatL2(embeddings.shape[1])
             self.index.add(embeddings)
-            os.makedirs("./chache", exist_ok=True)
-            faiss.write_index(self.index, "./chache/index.faiss")
+            os.makedirs("./cache", exist_ok=True)
+            faiss.write_index(self.index, "./cache/index.faiss")
 
     def _load_markdown_file(self, file_path: str) -> str:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -105,14 +105,14 @@ class MakeRailwayKnowledgePromptWithTohokuBERT:
         self.sentences = knowledge.split('\n')
         self.tokenizer = AutoTokenizer.from_pretrained("cl-tohoku/bert-base-japanese")
         self.model = AutoModel.from_pretrained("cl-tohoku/bert-base-japanese")
-        if os.path.exists("./chache/index.faiss"):
-            self.index = faiss.read_index("./chache/index.faiss")
+        if os.path.exists("./cache/index.faiss"):
+            self.index = faiss.read_index("./cache/index.faiss")
         else:
             embeddings = self._embed_text(self.sentences)
             self.index = faiss.IndexFlatL2(embeddings.shape[1])
             self.index.add(embeddings)
-            os.makedirs("./chache", exist_ok=True)
-            faiss.write_index(self.index, "./chache/index.faiss")
+            os.makedirs("./cache", exist_ok=True)
+            faiss.write_index(self.index, "./cache/index.faiss")
 
     def _load_markdown_file(self, file_path: str) -> str:
         with open(file_path, 'r', encoding='utf-8') as f:
