@@ -146,7 +146,7 @@ class MakeRailwayIncidentCasePromptWithTohokuBERT:
         self.k = k
         knowledge = ''
         p_file = './data/RailwayIncidentCase.csv'
-        self.sentences += self._load_csv_file(p_file)
+        self.sentences = self._load_csv_file(p_file)
         self.tokenizer = AutoTokenizer.from_pretrained("cl-tohoku/bert-base-japanese")
         self.model = AutoModel.from_pretrained("cl-tohoku/bert-base-japanese")
         if os.path.exists("./cache/railway-incident-index.faiss"):
