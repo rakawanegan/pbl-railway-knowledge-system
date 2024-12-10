@@ -7,13 +7,13 @@ from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
 
-from tool_component import (
+from src.tool_component import (
     MakeRailwayIncidentPrompt,
     MakeRailwayKnowledgePrompt,
     load_func_dict,
     tool_usage_tracker,
 )
-from utils import load_criteria_with_weights, load_prompt, load_tool
+from src.utils import load_criteria_with_weights, load_prompt, load_tool
 
 
 def make_agent(p_tool_configs, p_react_prompt, k, llm):

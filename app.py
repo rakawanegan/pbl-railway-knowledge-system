@@ -3,7 +3,7 @@ from flask_cors import CORS
 import openai
 import os
 from dotenv import load_dotenv
-from .src.main import make_agent, evaluate_by_llm_with_criteria
+from src.main import make_agent, evaluate_by_llm_with_criteria
 
 # 環境変数のロード
 load_dotenv()
