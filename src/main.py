@@ -1,200 +1,188 @@
-import os
-from glob import glob
 import re
-import numpy as np
+
+import matplotlib.pyplot as plt
 import pandas as pd
-import markdown
-from bs4 import BeautifulSoup
-import torch
-import faiss
-from transformers import AutoTokenizer, AutoModel
-from transformers import GPT2LMHeadModel, GPT2LMHeadModel
+from langchain.agents import initialize_agent
+from langchain.chains import LLMChain
+from langchain.chat_models import ChatOpenAI
+from langchain.prompts import PromptTemplate
+
+from tool_component import (
+    MakeRailwayIncidentPrompt,
+    MakeRailwayKnowledgePrompt,
+    load_func_dict,
+    tool_usage_tracker,
+)
+from utils import load_criteria_with_weights, load_prompt, load_tool
 
 
-class RailwayKnowledgeSystemWithRinnaGPT2:
-    def __init__(self, k: int) -> None:
-        self.k = k
-        knowledge = ''
-        for p_file in sorted(glob('data/*.md')):
-            knowledge += self._load_markdown_file(p_file)
-        self.sentences = knowledge.split('\n')
-        self.tokenizer = AutoTokenizer.from_pretrained("rinna/japanese-gpt2-medium")
-        self.model = GPT2LMHeadModel.from_pretrained("rinna/japanese-gpt2-medium")
-        if os.path.exists("./cache/rinna-railway-knowledge-index.faiss"):
-            self.index = faiss.read_index("./cache/rinna-railway-knowledge-index.faiss")
-        else:
-            embeddings = self._embed_text(self.sentences)
-            self.index = faiss.IndexFlatL2(embeddings.shape[1])
-            self.index.add(embeddings)
-            os.makedirs("./cache", exist_ok=True)
-            faiss.write_index(self.index, "./cache/rinna-railway-knowledge-index.faiss")
+def make_agent(p_tool_configs, p_react_prompt, k, llm):
+    mrkp = MakeRailwayKnowledgePrompt(k=k)
+    mrip = MakeRailwayIncidentPrompt(k=k)
 
-    def _load_markdown_file(self, file_path: str) -> str:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            text = f.read()
-        return text
+    func_dict = load_func_dict(mrkp, mrip)
+    tools = [load_tool(p_tool_config, func_dict) for p_tool_config in p_tool_configs]
+    react_prompt = load_prompt(p_react_prompt)
+    prompt = PromptTemplate(
+        input_variables=["task", "tools"],
+        template=react_prompt,
+    )
+    agent = initialize_agent(
+        llm=llm,
+        tools=tools,
+        prompt=prompt,
+        verbose=True,
+        handle_parsing_errors=True,
+        max_iterations=10,
+        early_stopping_method="generate",
+    )
+    return agent
 
-    def _embed_text(self, texts: list[str]) -> np.ndarray:
-        inputs = self.tokenizer(texts, return_tensors="pt", padding=True, truncation=True, max_length=1024)
-        with torch.no_grad():
-            embeddings = self.model.transformer.wte(inputs["input_ids"]).mean(dim=1)
-        return embeddings.numpy()
 
-    def get_text(self) -> str:
-        return '\n'.join(self.sentences)
+def evaluate_by_llm_with_criteria(
+    pred, answer, llm, question=None, criteria_with_weights=None
+):
+    """
+    LLMでの評価を実行し、指定された重みに基づいてスコアを計算する関数。
 
-    def _check_loops(self, answer: str) -> bool:
-        return len(answer.split(':')) > 10
+    Parameters:
+    pred (str): 採点対象の答案。
+    answer (str): 正解または模範解答。
+    llm (LLM): 使用する言語モデル。
+    question (str, optional): 問題文。デフォルトはNone。
+    criteria_with_weights (list of dict): 評価基準、重み、説明を含むリスト。
+        例: [{"name": "妥当性", "weight": 0.3, "description": "詳細な説明文"}, ...]
 
-    def get_basis(self, query: str) -> str:
-        query_embedding = self._embed_text([query])
-        _, indices = self.index.search(query_embedding, self.k) # first output is distance
-        basis = " ".join([self.sentences[i] for i in indices[0] if i < len(self.sentences)])
-        return basis
+    Returns:
+    dict: 評価結果を含む辞書。
+    """
+    if criteria_with_weights is None:
+        raise ValueError("評価基準と重みを含むリストまたは辞書を指定してください。")
 
-    def make_prompt(self, query: str) -> str:
-        basis = self.get_basis(query)
-        prompt = f"Context: {basis}\nQuery: {query}\nAnswer:"
-        return prompt
+    # Normalize weights
+    total_weight = sum(item["weight"] for item in criteria_with_weights)
+    for item in criteria_with_weights:
+        item["weight"] /= total_weight
 
-    def generate_answer(self, prompt: str) -> str:
-        self.count = 0
-        answer = self._generate_answer(prompt)
-        while self._check_loops(answer) and self.count < 10:
-            print(f"Loop detected. Retry {self.count}")
-            answer = self._generate_answer(prompt)
-        return answer
+    base_prompt_template = load_prompt("./docs/eval_base_prompt.md")
 
-    def _generate_answer(self, prompt: str) -> str:
-        self.count += 1
-        inputs = self.tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=1024)
-        input_ids = inputs['input_ids']
-        attention_mask = inputs['attention_mask']
-        outputs = self.model.generate(
-            input_ids,
-            num_return_sequences=1,
-            max_length=1000,
-            attention_mask=attention_mask,
-            pad_token_id=self.tokenizer.pad_token_id,
-            no_repeat_ngram_size=2,
+    scores = dict()
+    feedbacks = list()
+
+    for item in criteria_with_weights:
+
+        prompt_template = base_prompt_template.format(
+            name_description=item["description"]
         )
-        answer = ''.join(self.tokenizer.decode(outputs[0], skip_special_tokens=True).split('nswer:')[1:])
-        return answer
 
-    def inference(self, query: str) -> str:
-        basis = self.get_basis(query)
-        prompt = self.make_prompt(query)
-        answer = self.generate_answer(prompt)
-        output = \
-            f'''
-            query:
-            {query}
-
-            answer:
-            {answer}
-
-            evidence:
-            {basis}
-            '''
-        return output
-
-class MakeRailwayKnowledgePromptWithTohokuBERT:
-    def __init__(self, k: int) -> None:
-        self.k = k
-        knowledge = ''
-        for p_file in sorted(glob('data/*.md')):
-            knowledge += self._load_markdown_file(p_file)
-        self.sentences = knowledge.split('\n')
-        self.tokenizer = AutoTokenizer.from_pretrained("cl-tohoku/bert-base-japanese")
-        self.model = AutoModel.from_pretrained("cl-tohoku/bert-base-japanese")
-        if os.path.exists("./cache/railway-knowledge-index.faiss"):
-            self.index = faiss.read_index("./cache/railway-knowledge-index.faiss")
+        if question is not None:
+            prompt = PromptTemplate(
+                input_variables=["pred", "answer", "question"],
+                template=f"""
+                問題: "{{question}}"
+                答案: "{{pred}}"
+                解答: "{{answer}}",
+                {prompt_template}
+                """,
+            )
         else:
-            embeddings = self._embed_text(self.sentences)
-            self.index = faiss.IndexFlatL2(embeddings.shape[1])
-            self.index.add(embeddings)
-            os.makedirs("./cache", exist_ok=True)
-            faiss.write_index(self.index, "./cache/railway-knowledge-index.faiss")
+            prompt = PromptTemplate(
+                input_variables=["pred", "answer"],
+                template=f"""
+                答案: "{{pred}}"
+                解答: "{{answer}}",
+                {prompt_template}
+                """,
+            )
 
-    def _load_markdown_file(self, file_path: str) -> str:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            text = f.read()
-        return text
+        # Use the LLM to evaluate for the current name
+        chain = LLMChain(llm=llm, prompt=prompt)
+        feedback = chain.run(
+            pred=pred, answer=answer, question=question if question else None
+        )
+        print(feedback.replace("\n", ""))
+        suggest_score = re.search(r"【([\d.]+)】", feedback)
+        score = float(suggest_score.group(1)) if suggest_score else "N/A"
+        scores[item["name"]] = score
+        feedbacks.append(feedback)
 
-    def _embed_text(self, texts: list[str]) -> np.ndarray:
-        inputs = self.tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
-        with torch.no_grad():
-            embeddings = self.model(**inputs).last_hidden_state.mean(dim=1)
-        return embeddings.numpy()
+    # Calculate the weighted average score
+    weighted_scores = [
+        item["weight"] * scores[item["name"]]
+        for item in criteria_with_weights
+        if isinstance(scores[item["name"]], (int, float))
+    ]
+    final_score = sum(weighted_scores) if weighted_scores else 0
 
-    def get_text(self) -> str:
-        return '\n'.join(self.sentences)
-
-    def get_basis(self, query: str) -> None:
-        query_embedding = self._embed_text([query])
-        _, indices = self.index.search(query_embedding, self.k) # first output is distance
-        basis = " ".join([self.sentences[i] for i in indices[0] if i < len(self.sentences)])
-        return basis
-
-    def make_prompt(self, query: str) -> None:
-        basis = self.get_basis(query)
-        prompt = f"Context: {basis}\nQuery: {query}\nAnswer:"
-        return prompt
-
-class MakeRailwayIncidentCasePromptWithTohokuBERT:
-    def __init__(self, k: int) -> None:
-        self.k = k
-        knowledge = ''
-        p_file = './data/RailwayIncidentCase.csv'
-        self.sentences = self._load_csv_file(p_file)
-        self.tokenizer = AutoTokenizer.from_pretrained("cl-tohoku/bert-base-japanese")
-        self.model = AutoModel.from_pretrained("cl-tohoku/bert-base-japanese")
-        if os.path.exists("./cache/railway-incident-index.faiss"):
-            self.index = faiss.read_index("./cache/railway-incident-index.faiss")
-        else:
-            embeddings = self._embed_text(self.sentences)
-            self.index = faiss.IndexFlatL2(embeddings.shape[1])
-            self.index.add(embeddings)
-            os.makedirs("./cache", exist_ok=True)
-            faiss.write_index(self.index, "./cache/railway-incident-index.faiss")
-
-    def _load_csv_file(self, file_path: str) -> list[str]:
-        df = pd.read_csv(file_path, sep='\t', encoding='utf-16')
-        texts = list()
-        for i, row in df.iterrows():
-            row = str(dict(row))
-            row = re.sub(r'\{|\}', '', row)  # strip {}
-            row = re.sub(r"'", '"', row)  # replace ' with "
-            texts.append(row)
-        return texts
-
-    def _embed_text(self, texts: list[str]) -> np.ndarray:
-        inputs = self.tokenizer(texts, padding=True, truncation=True, return_tensors="pt")
-        with torch.no_grad():
-            embeddings = self.model(**inputs).last_hidden_state.mean(dim=1)
-        return embeddings.numpy()
-
-    def get_text(self) -> str:
-        return '\n'.join(self.sentences)
-
-    def get_basis(self, query: str) -> None:
-        query_embedding = self._embed_text([query])
-        _, indices = self.index.search(query_embedding, self.k) # first output is distance
-        basis = " ".join([self.sentences[i] for i in indices[0] if i < len(self.sentences)])
-        return basis
-
-    def make_prompt(self, query: str) -> None:
-        basis = self.get_basis(query)
-        prompt = f"Context: {basis}\nQuery: {query}\nAnswer:"
-        return prompt
-    
-
-def set_up():
-    RailwayKnowledgeSystemWithRinnaGPT2(k=1)
-    MakeRailwayIncidentCasePromptWithTohokuBERT(k=1)
-    MakeRailwayKnowledgePromptWithTohokuBERT(k=1)
+    # Compile final feedback
+    final_feedback = "\n".join(feedbacks)
+    final_feedback = final_feedback.replace("\n\n", "\n")
+    scores.update(
+        {"final_feedback": final_feedback, "final_score": round(final_score, 2)}
+    )
+    return scores
 
 
-if __name__ == '__main__':
-    set_up()
-    print("Setup done.")
+def plot_tools_count(current_tool_usage_counts: dict):
+    current_tool_usage_counts = {
+        k: v / sum(current_tool_usage_counts.values())
+        for k, v in current_tool_usage_counts.items()
+    }
+    tool_usage_df = pd.DataFrame(
+        list(current_tool_usage_counts.items()), columns=["Tool", "Usage_Count"]
+    )
+
+    plt.figure(figsize=(10, 6))
+    plt.bar(tool_usage_df["Tool"], tool_usage_df["Usage_Count"])
+    plt.xlabel("Tool")
+    plt.ylabel("Usage Ratio")
+    plt.title("Usage Ratio of Each Tool")
+    plt.show()
+
+
+def main():
+    question = ""
+    answer = ""
+
+    k = 3
+    p_tool_configs = [
+        "./docs/tools/code.yaml",
+        "./docs/tools/incident_rag.yaml",
+        "./docs/tools/knowledge_rag.yaml",
+        "./docs/tools/raw_text.yaml",
+        "./docs/tools/search.yaml",
+    ]
+    p_eval_configs = [
+        "./docs/evals/accuracy.yaml",
+        "./docs/evals/calculation.yaml",
+        "./docs/evals/evidence.yaml",
+        "./docs/evals/expertise.yaml",
+        "./docs/evals/expression.yaml",
+        "./docs/evals/relevance.yaml",
+    ]
+    p_react_prompt = "./docs/react_base_prompt.md"
+
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    agent = make_agent(p_tool_configs, p_react_prompt, k, llm)
+    criteria_with_weights = load_criteria_with_weights(p_eval_configs)
+
+    prediction = agent.run(question)
+    print(prediction)
+
+    eval_result = evaluate_by_llm_with_criteria(
+        prediction,
+        answer,
+        llm,
+        question=question,
+        criteria_with_weights=criteria_with_weights,
+    )
+    print(eval_result)
+
+    # ツール使用状況の可視化
+    current_tool_usage_counts = tool_usage_tracker.get_counts()
+    if len(current_tool_usage_counts) > 0:
+        plot_tools_count(current_tool_usage_counts)
+
+
+if __name__ == "__main__":
+    main()

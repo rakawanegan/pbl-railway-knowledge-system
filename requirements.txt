@@ -1,0 +1,9 @@
+transformers
+faiss-gpu
+fugashi
+ipadic
+openai
+langchain
+langchain-community
+unidic_lite
+autogen-agentchat~=0.2

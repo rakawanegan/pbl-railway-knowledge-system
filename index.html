@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT-like App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        header {
+            background-color: #6200ea;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #6200ea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #3700b3;
+        }
+
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <header>ChatGPT-like App</header>
+    <div class="container">
+        <h2>Chat with AI</h2>
+        <textarea id="userInput" placeholder="Type your message here..."></textarea>
+        <button onclick="sendMessage()">Send</button>
+        <div class="output" id="chatOutput">AI's response will appear here...</div>
+    </div>
+    <script>
+        async function sendMessage() {
+            const userMessage = document.getElementById("userInput").value;
+            const chatOutput = document.getElementById("chatOutput");
+
+            if (!userMessage.trim()) {
+                chatOutput.textContent = "Please enter a message!";
+                return;
+            }
+
+            chatOutput.textContent = "AI is thinking...";
+
+            try {
+                const response = await fetch("http://127.0.0.1:5000/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: userMessage })
+                });
+                const data = await response.json();
+                chatOutput.textContent = data.response || data.error || "No response from AI.";
+            } catch (error) {
+                chatOutput.textContent = "Error communicating with the server.";
+            }
+        }
+    </script>
+</body>
+</html>
+
