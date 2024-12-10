@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import openai
 import os
+from langchain.chat_models import ChatOpenAI
 from dotenv import load_dotenv
 from src.main import make_agent, evaluate_by_llm_with_criteria
 
@@ -24,20 +25,13 @@ p_tool_configs = [
 ]
 p_react_prompt = "./docs/react_base_prompt.md"
 k = 3
-
-# llmを一度だけ定義
-def llm(messages):
-    return openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=messages
-    )
-
-# agentも一度だけ初期化してグローバルスコープに保持
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 agent = make_agent(p_tool_configs, p_react_prompt, k, llm)
 
 @app.route('/chat', methods=['POST'])
 def chat():
     user_input = request.json.get('message', '')
+    print(user_input)
     if not user_input:
         return jsonify({"error": "Message is required"}), 400
 
@@ -75,4 +69,4 @@ def evaluate():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)

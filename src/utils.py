@@ -25,7 +25,7 @@ def load_tool(p_config: dict[str], func_dict) -> Tool:
     tool_config = load_yaml_config(p_config)
     return Tool(
         name=tool_config["name"],
-        func=func_dict["name"],
+        func=func_dict[tool_config["name"]],
         description=tool_config["description"],
     )
 
