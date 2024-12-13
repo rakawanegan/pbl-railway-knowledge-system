@@ -72,7 +72,7 @@ def evaluate_by_llm_with_criteria(
     for item in criteria_with_weights:
 
         prompt_template = base_prompt_template.format(
-            name_description=item["description"]
+            criterion_description=item["description"]
         )
 
         if question is not None:
