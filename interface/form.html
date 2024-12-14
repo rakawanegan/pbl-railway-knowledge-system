@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>事故事例分析モックアップ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, textarea, button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        input:focus, textarea:focus, button:focus {
+            outline: none;
+            border-color: #007BFF;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        .result h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+        .section {
+            margin-top: 20px;
+        }
+        .section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .section p {
+            margin: 0;
+            line-height: 1.6;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            input, textarea, button {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('caseForm');
+            const result = document.getElementById('result');
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                const title = document.getElementById('caseTitle').value.trim();
+                const details = document.getElementById('caseDetails').value.trim();
+
+                if (!title || !details) {
+                    alert('すべてのフィールドを入力してください。');
+                    return;
+                }
+
+                // ダミーで分析結果を設定
+                result.querySelector('.stakeholder p').innerText = '作業員、管理者、安全担当者';
+                result.querySelector('.lesson p').innerText = '作業環境の定期点検と安全教育が重要です。';
+                result.querySelector('.admin-suggestions p').innerHTML = '<ul><li>作業エリアの定期的な点検スケジュールを導入する。</li><li>安全教育プログラムを全作業員に義務化する。</li></ul>';
+
+                result.style.display = 'block'; // 分析結果を表示
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>事故事例分析モックアップ</h1>
+
+        <form id="caseForm">
+            <div class="form-group">
+                <label for="caseTitle">事例タイトル</label>
+                <input type="text" id="caseTitle" name="caseTitle" placeholder="例: 工場内での転倒事故" required>
+            </div>
+            <div class="form-group">
+                <label for="caseDetails">事例の詳細</label>
+                <textarea id="caseDetails" name="caseDetails" rows="5" placeholder="事故の詳細を記入してください..." required></textarea>
+            </div>
+            <button type="submit">分析する</button>
+        </form>
+
+        <div id="result" class="result">
+            <h2>分析結果</h2>
+
+            <div class="section stakeholder">
+                <h3>ステークホルダー</h3>
+                <p></p>
+            </div>
+
+            <div class="section lesson">
+                <h3>教訓と該当箇所</h3>
+                <p></p>
+            </div>
+
+            <div class="section admin-suggestions">
+                <h3>管理者への改善策提案</h3>
+                <p></p>
+            </div>
+
+            <div class="section radar-chart">
+                <h3>事例評価レーダーチャート</h3>
+                <div class="radar-chart-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+                        <g stroke="#dce5eb">
+                            <path d="M 100 100 L 100.0 0.0" />
+                            <path d="M 100 100 L 186.6 150.0" />
+                            <path d="M 100 100 L 13.4 150.0" />
+                        </g>
+                        <g stroke="#dce5eb" fill="none">
+                            <path d="M 100.0 0.0 L 186.6 150.0 L 13.4 150.0 L 100.0 0.0" />
+                            <path d="M 100.0 33.3 L 157.7 133.3 L 42.3 133.3 L 100.0 33.3" />
+                            <path d="M 100.0 66.7 L 128.9 116.7 L 71.1 116.7 L 100.0 66.7" />
+                        </g>
+                        <path d="M 100.0 30.0 L 160.6 135.0 L 39.4 135.0 L 100.0 30.0" fill="#2589d030" stroke="#2589d0" />
+                        <g fill="#2589d0">
+                            <circle cx="100.0" cy="30.0" r="3" />
+                            <circle cx="160.6" cy="135.0" r="3" />
+                            <circle cx="39.4" cy="135.0" r="3" />
+                            <text x="100" y="20" text-anchor="middle" font-size="10" fill="#2589d0">安全意識</text>
+                            <text x="160.6" y="145" text-anchor="middle" font-size="10" fill="#2589d0">設備管理</text>
+                            <text x="39.4" y="145" text-anchor="middle" font-size="10" fill="#2589d0">対応能力</text>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

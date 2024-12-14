@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT風チャットアプリ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 90vh;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #007BFF;
+            color: white;
+            padding: 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        .message.user {
+            justify-content: flex-end;
+        }
+        .message-bubble {
+            max-width: 70%;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        .message-bubble.user {
+            background-color: #007BFF;
+            color: white;
+            border-bottom-right-radius: 0;
+        }
+        .message-bubble.bot {
+            background-color: #e4e4e4;
+            color: #333;
+            border-bottom-left-radius: 0;
+        }
+        .chat-input {
+            display: flex;
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            background: #fff;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        .chat-input button {
+            background-color: #007BFF;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 10px 15px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .chat-input button:hover {
+            background-color: #0056b3;
+        }
+
+        @media (max-width: 600px) {
+            .chat-header {
+                font-size: 1.2rem;
+            }
+            .message-bubble {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const messagesContainer = document.querySelector('.chat-messages');
+            const inputField = document.querySelector('.chat-input input');
+            const sendButton = document.querySelector('.chat-input button');
+
+            function addMessage(content, isUser = true) {
+                const message = document.createElement('div');
+                message.classList.add('message', isUser ? 'user' : 'bot');
+
+                const bubble = document.createElement('div');
+                bubble.classList.add('message-bubble', isUser ? 'user' : 'bot');
+                bubble.textContent = content;
+
+                message.appendChild(bubble);
+                messagesContainer.appendChild(message);
+
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+
+            sendButton.addEventListener('click', () => {
+                const userInput = inputField.value.trim();
+                if (userInput) {
+                    addMessage(userInput, true);
+                    inputField.value = '';
+
+                    setTimeout(() => {
+                        addMessage('これはAIからの自動返信です。内容: ' + userInput, false);
+                    }, 1000);
+                }
+            });
+
+            inputField.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    sendButton.click();
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">ChatGPT風チャットアプリ</div>
+        <div class="chat-messages">
+            <div class="message bot">
+                <div class="message-bubble bot">こんにちは！ご質問があればどうぞ。</div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" placeholder="メッセージを入力...">
+            <button>送信</button>
+        </div>
+    </div>
+</body>
+</html>

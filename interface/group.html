@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAS Interface</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .form-section, .output-section {
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: #fff;
+            background-color: #3498db;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .output {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 1rem;
+            white-space: pre-wrap;
+            border: 1px solid #ddd;
+        }
+        .custom-agent-details {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="form-section">
+            <h2>合議の内容を入力してください</h2>
+            <form id="inputForm">
+                <label for="topic">題材:</label>
+                <input type="text" id="topic" name="topic" placeholder="題材を入力してください" required>
+
+                <label for="background">事前知識と条件:</label>
+                <textarea id="background" name="background" rows="4" placeholder="事前知識や条件を入力してください"></textarea>
+
+                <label for="agents">各エージェントの定義:</label>
+                <div id="agents-container">
+                    <div class="agent-definition">
+                        <label>エージェント:</label>
+                        <div>
+                            <label><input type="checkbox" name="agent" value="エージェントA"> エージェントA</label>
+                            <label><input type="checkbox" name="agent" value="エージェントB"> エージェントB</label>
+                            <label><input type="checkbox" name="agent" value="エージェントC"> エージェントC</label>
+                            <label><input type="checkbox" name="agent" value="エージェントD"> エージェントD</label>
+                            <label><input type="checkbox" id="custom-agent-checkbox"> その他</label>
+                        </div>
+                        <div class="custom-agent-details" id="custom-agent-details">
+                            <label for="custom-agent-name">カスタムエージェント名 (英数字のみ、スペース不可):</label>
+                            <input type="text" id="custom-agent-name" name="custom-agent-name" pattern="^[a-zA-Z0-9]+$" placeholder="例: AgentX">
+                            <label for="custom-agent-role">役割:</label>
+                            <textarea id="custom-agent-role" name="custom-agent-role" rows="2" placeholder="カスタムエージェントの役割を記述"></textarea>
+                            <label for="custom-agent-description">説明:</label>
+                            <textarea id="custom-agent-description" name="custom-agent-description" rows="2" placeholder="カスタムエージェントの説明を記述"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <label for="question">問:</label>
+                <textarea id="question" name="question" rows="2" placeholder="エージェントに解答させたい問を入力してください"></textarea>
+
+                <button type="button" id="submitBtn">送信</button>
+            </form>
+        </div>
+
+        <div class="output-section">
+            <h2>エージェントの合議内容</h2>
+            <div class="output" id="output">ここに結果が表示されます。</div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('custom-agent-checkbox').addEventListener('change', function() {
+            const customAgentDetails = document.getElementById('custom-agent-details');
+            if (this.checked) {
+                customAgentDetails.style.display = 'block';
+            } else {
+                customAgentDetails.style.display = 'none';
+                document.getElementById('custom-agent-name').value = '';
+                document.getElementById('custom-agent-role').value = '';
+                document.getElementById('custom-agent-description').value = '';
+            }
+        });
+
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            const topic = document.getElementById('topic').value;
+            const background = document.getElementById('background').value;
+            const question = document.getElementById('question').value;
+
+            if (!topic || !background || !question) {
+                alert('すべてのフィールドを入力してください。');
+                return;
+            }
+
+            const agents = [];
+            document.querySelectorAll('input[name="agent"]:checked').forEach(checkbox => {
+                agents.push(checkbox.value);
+            });
+
+            if (document.getElementById('custom-agent-checkbox').checked) {
+                const customName = document.getElementById('custom-agent-name').value;
+                const customRole = document.getElementById('custom-agent-role').value;
+                const customDescription = document.getElementById('custom-agent-description').value;
+
+                if (!customName.match(/^[a-zA-Z0-9]+$/)) {
+                    alert('カスタムエージェント名は英数字のみで入力してください。');
+                    return;
+                }
+                if (!customName || !customRole || !customDescription) {
+                    alert('カスタムエージェントのすべてのフィールドを入力してください。');
+                    return;
+                }
+
+                agents.push(`${customName} (役割: ${customRole}, 説明: ${customDescription})`);
+            }
+
+            if (agents.length === 0) {
+                alert('少なくとも1つのエージェントを選択してください。');
+                return;
+            }
+
+            const predefinedResponses = agents.map(agent => (
+                `${agent}: 「${topic}」について、事前知識「${background}」に基づき議論を進めます。`
+            ));
+
+            document.getElementById('output').textContent = predefinedResponses.join('\n\n');
+        });
+    </script>
+</body>
+</html>
