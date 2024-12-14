@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>採点レポート</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2em auto;
+            background: #fff;
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2em;
+        }
+        .header h1 {
+            font-size: 1.8em;
+            margin: 0;
+        }
+        .question {
+            margin-bottom: 1.5em;
+        }
+        .question h3 {
+            margin: 0 0 0.5em;
+            font-size: 1.2em;
+        }
+        .answer {
+            margin-bottom: 1em;
+        }
+        .section {
+            margin-top: 2em;
+        }
+        .radar-chart {
+            text-align: center;
+        }
+        .radar-chart svg {
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+        }
+        .hidden {
+            display: none;
+        }
+        .feedback {
+            margin-top: 2em;
+            background: #f9f9f9;
+            padding: 1em;
+            border: 1px solid #e1e1e1;
+            border-radius: 4px;
+        }
+    </style>
+    <script>
+        function showReport() {
+            document.getElementById('report').classList.remove('hidden');
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>採点レポート</h1>
+        </div>
+
+        <div class="section question">
+            <h3>問題 1: 安全意識について説明してください。</h3>
+            <textarea id="answer" rows="4" style="width: 100%; padding: 1em; border: 1px solid #ccc; border-radius: 4px;" placeholder="ここに回答を入力してください..."></textarea>
+            <button onclick="showReport()" style="margin-top: 1em; padding: 0.5em 1em; background-color: #2589d0; color: #fff; border: none; border-radius: 4px; cursor: pointer;">採点</button>
+        </div>
+
+        <div id="report" class="hidden">
+            <div class="section radar-chart">
+                <h3>事例評価レーダーチャート</h3>
+                <div class="radar-chart-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+                        <g stroke="#dce5eb">
+                            <path d="M 100 100 L 100.0 0.0" />
+                            <path d="M 100 100 L 186.6 150.0" />
+                            <path d="M 100 100 L 13.4 150.0" />
+                        </g>
+                        <g stroke="#dce5eb" fill="none">
+                            <path d="M 100.0 0.0 L 186.6 150.0 L 13.4 150.0 L 100.0 0.0" />
+                            <path d="M 100.0 33.3 L 157.7 133.3 L 42.3 133.3 L 100.0 33.3" />
+                            <path d="M 100.0 66.7 L 128.9 116.7 L 71.1 116.7 L 100.0 66.7" />
+                        </g>
+                        <path d="M 100.0 30.0 L 160.6 135.0 L 39.4 135.0 L 100.0 30.0" fill="#2589d030" stroke="#2589d0" />
+                        <g fill="#2589d0">
+                            <circle cx="100.0" cy="30.0" r="3" />
+                            <circle cx="160.6" cy="135.0" r="3" />
+                            <circle cx="39.4" cy="135.0" r="3" />
+                            <text x="100" y="20" text-anchor="middle" font-size="10" fill="#2589d0">安全意識</text>
+                            <text x="160.6" y="145" text-anchor="middle" font-size="10" fill="#2589d0">設備管理</text>
+                            <text x="39.4" y="145" text-anchor="middle" font-size="10" fill="#2589d0">対応能力</text>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="section feedback">
+                <h3>採点結果とフィードバック</h3>
+                <p><strong>採点理由:</strong> あなたの回答には具体例が含まれており、安全意識の重要性をしっかり説明していました。ただし、詳細なエビデンスが不足しています。</p>
+                <p><strong>改善点:</strong> より具体的な事例や統計データを追加すると、説得力が増します。また、簡潔に要点をまとめると読みやすくなります。</p>
+                <p><strong>関連知識:</strong> 安全意識は労働環境の向上に直結します。例えば、定期的なトレーニングやリスクアセスメントの実施が効果的です。</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
