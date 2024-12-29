@@ -147,6 +147,7 @@ class MakeRailwayIncidentPrompt:
 
 
 def search_word(word, mrkp):
+    word = re.sub(r"[「」（）［］【】『』〈〉《》〔〕]", "", word)
     documents = mrkp.sentences
     pattern = re.compile(r"|".join(re.escape(word) for word in word.split()), re.IGNORECASE)
     matched_sentences = [doc for doc in documents if pattern.search(doc)]
