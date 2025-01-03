@@ -11,7 +11,10 @@ import numpy as np
 import pandas as pd
 import requests
 import torch
-from transformers import AutoModel, AutoTokenizer, GPT2LMHeadModel
+import wikipedia
+from transformers import AutoModel, AutoTokenizer
+
+wikipedia.set_lang("jp")
 
 
 class ToolUsageTracker:
@@ -146,12 +149,17 @@ class MakeRailwayIncidentPrompt:
         return prompt
 
 
-def search_word(word, mrkp):
-    word = re.sub(r"[「」（）［］【】『』〈〉《》〔〕]", "", word)
+def search_word(query, mrkp):
+    query = re.sub(r"[「」（）［］【】『』〈〉《》〔〕]", "", query)
     documents = mrkp.sentences
-    pattern = re.compile(r"|".join(re.escape(word) for word in word.split()), re.IGNORECASE)
+    pattern = re.compile(
+        r"|".join(re.escape(query) for query in query.split()), re.IGNORECASE
+    )
     matched_sentences = [doc for doc in documents if pattern.search(doc)]
-    return "\n".join(matched_sentences)
+    return (
+        "\n".join(matched_sentences)
+        or f"「{query}」に関連する結果は見つかりませんでした。他の検索ワードを用いて検索するか、他ツールの利用を検討してください。"
+    )
 
 
 def get_knowledge(query, mrkp):
@@ -180,7 +188,19 @@ def duckduckgo_search(query: str) -> str:
     for topic in related_topics[:5]:
         if "Text" in topic and "FirstURL" in topic:
             formatted_results += f"Title: {topic['Text']}\nURL: {topic['FirstURL']}\n\n"
-    return formatted_results or "No relevant results found."
+    return (
+        formatted_results
+        or f"「{query}」に関連する結果は見つかりませんでした。他の検索ワードを用いて検索するか、他ツールの利用を検討してください。"
+    )
+
+
+@count_tool_usage("WEBSearch")
+def web_search(keyword, top_k=3):
+    page_list = wikipedia.search(keyword)
+    page_summary = "\n".join(
+        [wikipedia.summary(page_name) for page_name in page_list[:top_k]]
+    )
+    return page_summary
 
 
 @count_tool_usage("Code")
@@ -242,5 +262,5 @@ def load_func_dict(mrkp, mrip) -> dict[str]:
         "RailwayIncidentSearcher": railway_incident_searcher,
         "RailwayTechnicalStandardSearcher": railway_technical_standard_searcher,
         "RailwayTechnicalKeywordSearcher": railway_technical_keyword_searcher,
-        "DuckDuckGoWebSearcher": duckduckgo_search,
+        "WebSearcher": web_search,
     }

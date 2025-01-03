@@ -70,7 +70,6 @@ def evaluate_by_llm_with_criteria(
     feedbacks = list()
 
     for item in criteria_with_weights:
-
         prompt_template = base_prompt_template.format(
             criterion_description=item["description"]
         )

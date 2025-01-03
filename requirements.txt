@@ -7,3 +7,4 @@ langchain
 langchain-community
 unidic_lite
 autogen-agentchat~=0.2
+wikipedia
