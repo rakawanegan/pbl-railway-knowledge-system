@@ -197,6 +197,8 @@ def duckduckgo_search(query: str) -> str:
 @count_tool_usage("WEBSearch")
 def web_search(keyword, top_k=3):
     page_list = wikipedia.search(keyword)
+    if not len(page_list):
+        return f"「{keyword}」に関連する結果は見つかりませんでした。他の検索ワードを用いて検索するか、他ツールの利用を検討してください。"
     page_summary = "\n".join(
         [wikipedia.summary(page_name) for page_name in page_list[:top_k]]
     )
