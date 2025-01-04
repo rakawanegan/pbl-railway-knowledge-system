@@ -3,8 +3,8 @@ faiss-gpu
 fugashi
 ipadic
 openai==0.28
-langchain>=0.3.14,<0.4.0
-langchain-community
+langchain<0.3.0
+langchain-community==0.2.19
 langchain-openai
 unidic_lite
 autogen-agentchat~=0.2
