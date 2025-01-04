@@ -5,6 +5,9 @@ ipadic
 openai==0.28
 langchain
 langchain-community
+langchain-openai
 unidic_lite
 autogen-agentchat~=0.2
+torch==2.0.1
 wikipedia
+duckduckgo-search

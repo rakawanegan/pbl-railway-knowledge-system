@@ -5,11 +5,10 @@ import subprocess
 import sys
 from functools import wraps
 from glob import glob
-
+from duckduckgo_search import DDGS
 import faiss
 import numpy as np
 import pandas as pd
-import requests
 import torch
 import wikipedia
 from transformers import AutoModel, AutoTokenizer
@@ -172,30 +171,27 @@ def get_incident(query, mrip):
     return basis
 
 
-@count_tool_usage("DuckDuckGoSearch")
+@count_tool_usage("DuckDuckGoWebSearcher")
 def duckduckgo_search(query: str) -> str:
-    search_url = "https://api.duckduckgo.com/"
-    params = {
-        "q": query,
-        "format": "json",
-        "pretty": 1,
-    }
-    response = requests.get(search_url, params=params)
-    response.raise_for_status()
-    search_results = response.json()
-    related_topics = search_results.get("RelatedTopics", [])
-    formatted_results = ""
-    for topic in related_topics[:5]:
-        if "Text" in topic and "FirstURL" in topic:
-            formatted_results += f"Title: {topic['Text']}\nURL: {topic['FirstURL']}\n\n"
-    return (
-        formatted_results
-        or f"「{query}」に関連する結果は見つかりませんでした。他の検索ワードを用いて検索するか、他ツールの利用を検討してください。"
-    )
+    with DDGS() as ddgs:
+        results = list(ddgs.text(
+            keywords=query,
+            region="wt-wt",
+            safesearch="moderate",
+            timelimit=None,
+            max_results=4
+        ))
+    formatted_results = []
+    for i, result in enumerate(results, 1):
+        title = result.get("title", "タイトルなし")
+        href = result.get("href", "リンクなし")
+        body = result.get("body", "サマリーなし")
+        formatted_results.append(f"{i}. タイトル: {title}\n   リンク: {href}\n   サマリー: {body}")
+    return "\n\n".join(formatted_results) or f"「{query}」に関連する結果は見つかりませんでした。他の検索ワードを用いて検索するか、他ツールの利用を検討してください。"
 
 
-@count_tool_usage("WEBSearch")
-def web_search(keyword, top_k=3):
+@count_tool_usage("WikipediaSearch")
+def wikipedia_search(keyword, top_k=3):
     page_list = wikipedia.search(keyword)
     if not len(page_list):
         return f"「{keyword}」に関連する結果は見つかりませんでした。他の検索ワードを用いて検索するか、他ツールの利用を検討してください。"
@@ -243,7 +239,7 @@ def execute_code(code: str):
         except Exception as e:
             output = f"Error: {e}"
 
-    return output
+    return output or '有効な出力がありません。Pythonコードを実行する場合は、print文を使用して出力を生成してください。'
 
 
 def load_func_dict(mrkp, mrip) -> dict[str]:
@@ -264,5 +260,6 @@ def load_func_dict(mrkp, mrip) -> dict[str]:
         "RailwayIncidentSearcher": railway_incident_searcher,
         "RailwayTechnicalStandardSearcher": railway_technical_standard_searcher,
         "RailwayTechnicalKeywordSearcher": railway_technical_keyword_searcher,
-        "WebSearcher": web_search,
+        "DuckDuckGoWebSearcher": duckduckgo_search,
+        "WikipediaSearcher": wikipedia_search,
     }
