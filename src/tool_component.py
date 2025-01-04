@@ -5,12 +5,13 @@ import subprocess
 import sys
 from functools import wraps
 from glob import glob
-from duckduckgo_search import DDGS
+
 import faiss
 import numpy as np
 import pandas as pd
 import torch
 import wikipedia
+from duckduckgo_search import DDGS
 from transformers import AutoModel, AutoTokenizer
 
 wikipedia.set_lang("jp")
@@ -174,20 +175,25 @@ def get_incident(query, mrip):
 @count_tool_usage("DuckDuckGoWebSearcher")
 def duckduckgo_search(query: str) -> str:
     with DDGS() as ddgs:
-        results = list(ddgs.text(
-            keywords=query,
-            region="wt-wt",
-            safesearch="moderate",
-            timelimit=None,
-            max_results=4
-        ))
+        results = list(
+            ddgs.text(
+                keywords=query,
+                region="wt-wt",
+                safesearch="moderate",
+                timelimit=None,
+                max_results=4,
+            )
+        )
     formatted_results = []
     for i, result in enumerate(results, 1):
         title = result.get("title", "タイトルなし")
         href = result.get("href", "リンクなし")
         body = result.get("body", "サマリーなし")
         formatted_results.append(f"{i}. タイトル: {title}\n   リンク: {href}\n   サマリー: {body}")
-    return "\n\n".join(formatted_results) or f"「{query}」に関連する結果は見つかりませんでした。他の検索ワードを用いて検索するか、他ツールの利用を検討してください。"
+    return (
+        "\n\n".join(formatted_results)
+        or f"「{query}」に関連する結果は見つかりませんでした。他の検索ワードを用いて検索するか、他ツールの利用を検討してください。"
+    )
 
 
 @count_tool_usage("WikipediaSearch")
@@ -239,7 +245,7 @@ def execute_code(code: str):
         except Exception as e:
             output = f"Error: {e}"
 
-    return output or '有効な出力がありません。Pythonコードを実行する場合は、print文を使用して出力を生成してください。'
+    return output or "有効な出力がありません。Pythonコードを実行する場合は、print文を使用して出力を生成してください。"
 
 
 def load_func_dict(mrkp, mrip) -> dict[str]:
